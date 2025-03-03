@@ -1,98 +1,117 @@
 const showResult = document.querySelector("h1");
 const showFirstNumber = document.querySelector("h2");
-const addNumber = document.querySelectorAll(".number-event");
-const operator = document.querySelectorAll(".operator-event");
-const calcul = document.querySelector("#calcul");
-const reset = document.querySelector("#reset");
+const numberButtons = document.querySelectorAll(".number-event");
+const operatorButtons = document.querySelectorAll(".operator-event");
+const calculButton = document.querySelector("#calcul");
+const resetButton = document.querySelector("#reset");
 
-console.log(reset);
+let currentNumber = "";
+let firstNumber = "";
+let secondNumber = "";
+let selectedOperator = null;
+let errorState = false;
 
-console.log(showFirstNumber);
+const hasFirstNumber = () => {
+  return firstNumber !== "";
+};
+const operatorSelected = () => {
+  return selectedOperator !== null;
+};
 
-// let value;
-let createNumber = "";
-let firstNumberToCalculate = "";
-let secondNumberToCalculate = "";
-let addOperator = null;
+const updateDisplay = (display, result) => {
+  return (display.textContent = result);
+};
 
-addNumber.forEach((btns) => {
+const setValue = (value) => {
+  return value === "0" ? "" : value;
+};
+
+numberButtons.forEach((btns) => {
   btns.addEventListener("click", () => {
-    let valueButton = btns.textContent;
+    if (errorState) return;
+    const valueButton = btns.textContent;
 
-    if (showResult.textContent === "0") {
-      showResult.textContent = "";
-    }
-    if (firstNumberToCalculate === "0") {
-      firstNumberToCalculate = "";
-    }
-    if (showResult.textContent === addOperator) {
-      if (!firstNumberToCalculate) {
-        firstNumberToCalculate = createNumber;
-        showFirstNumber.textContent = firstNumberToCalculate;
-        createNumber = "";
+    updateDisplay(showResult, setValue(showResult.textContent));
+    firstNumber = setValue(firstNumber);
+    currentNumber = setValue(currentNumber);
+
+    if (showResult.textContent === selectedOperator) {
+      if (!hasFirstNumber()) {
+        currentNumber === ""
+          ? (firstNumber = "0")
+          : (firstNumber = currentNumber);
+
+        updateDisplay(showFirstNumber, firstNumber);
+        currentNumber = "";
       }
-      showResult.textContent = "";
-    }
-    if (firstNumberToCalculate !== "" && addOperator === null) {
-      firstNumberToCalculate += valueButton;
-      showFirstNumber.textContent = firstNumberToCalculate;
-      console.log("test");
-    }
-    if (firstNumberToCalculate === "" && addOperator !== null) {
-      firstNumberToCalculate = "0";
+
+      updateDisplay(showResult, "");
     }
 
-    showResult.textContent += valueButton;
-    createNumber += valueButton;
-    console.log(createNumber);
+    if (hasFirstNumber() && !operatorSelected()) {
+      firstNumber += valueButton;
+      updateDisplay(showFirstNumber, firstNumber);
+    }
+
+    if (!hasFirstNumber() && operatorSelected()) {
+      firstNumber = "0";
+    }
+
+    updateDisplay(showResult, showResult.textContent + valueButton);
+    currentNumber += valueButton;
   });
 });
 
-operator.forEach((btns) => {
+operatorButtons.forEach((btns) => {
   btns.addEventListener("click", () => {
-    let valueButton = btns.textContent;
+    if (errorState) return;
+    const valueButton = btns.textContent;
 
-    if (addOperator === null) {
-      addOperator = valueButton;
-      showResult.textContent = valueButton;
+    if (!operatorSelected()) {
+      selectedOperator = valueButton;
+      updateDisplay(showResult, valueButton);
     }
   });
 });
 
-calcul.addEventListener("click", () => {
-  if (firstNumberToCalculate) {
-    secondNumberToCalculate = createNumber;
-    switch (addOperator) {
+calculButton.addEventListener("click", () => {
+  if (hasFirstNumber() && currentNumber !== "") {
+    let result;
+    secondNumber = currentNumber;
+    switch (selectedOperator) {
       case "+":
-        showResult.textContent =
-          Number(firstNumberToCalculate) + Number(secondNumberToCalculate);
+        result = Number(firstNumber) + Number(secondNumber);
         break;
       case "-":
-        showResult.textContent =
-          Number(firstNumberToCalculate) - Number(secondNumberToCalculate);
+        result = Number(firstNumber) - Number(secondNumber);
         break;
       case "*":
-        showResult.textContent =
-          Number(firstNumberToCalculate) * Number(secondNumberToCalculate);
+        result = Number(firstNumber) * Number(secondNumber);
         break;
       case "/":
-        showResult.textContent =
-          Number(firstNumberToCalculate) / Number(secondNumberToCalculate);
+        result =
+          secondNumber === "0"
+            ? "Error"
+            : Number(firstNumber) / Number(secondNumber);
         break;
     }
-    firstNumberToCalculate = showResult.textContent;
-    showFirstNumber.textContent = firstNumberToCalculate;
-    addOperator = null;
-    secondNumberToCalculate = "";
-    createNumber = "";
+    updateDisplay(showResult, result);
+    result === "Error"
+      ? (errorState = true)
+      : clearState(showResult.textContent);
   }
 });
 
-reset.addEventListener("click", () => {
-  createNumber = "";
-  firstNumberToCalculate = "";
-  secondNumberToCalculate = "";
-  addOperator = null;
-  showResult.textContent = 0;
-  showFirstNumber.textContent = 0;
+resetButton.addEventListener("click", () => {
+  clearState();
 });
+
+const clearState = (value = "0") => {
+  currentNumber = "";
+  secondNumber = "";
+  selectedOperator = null;
+  firstNumber = String(value);
+  errorState = false;
+  updateDisplay(showResult, value);
+  updateDisplay(showFirstNumber, value);
+};
